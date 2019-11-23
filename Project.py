@@ -236,7 +236,7 @@ def mlem2Algorithm(attributeValue, attributeType, goalSet, decisionValue):
                 currentBlock = set()
             else:
                 currentGoal = biggestIntersection["intersectionBlock"]
-
+                print(currentGoal)
                 if len(currentGoal) == 0:
                     currentGoal = goalsLeft
                     ruleDictionary = {}
@@ -266,7 +266,7 @@ def biggestIntersectionCalculator(attributeValue, attributeType, ruleDictionary,
     for loop, (attribute, attributeValueSet) in enumerate(attributeValue.items()):
         for value, valueBlock in attributeValueSet.items():
             if (attributeType[loop] == 1 and attribute not in ruleDictionary) or (attributeType[loop] == 2 and (attribute not in ruleDictionary or value not in ruleDictionary[attribute])):
-                if len(valueBlock.intersection(currentGoal)) == len(matchDictionary["intersectionBlock"]) and len(value) < len(matchDictionary["matchingBlock"]) or len(valueBlock.intersection(currentGoal)) > len(matchDictionary["intersectionBlock"]):
+                if len(valueBlock.intersection(currentGoal)) == len(matchDictionary["intersectionBlock"]) and len(valueBlock) < len(matchDictionary["matchingBlock"]) or len(valueBlock.intersection(currentGoal)) > len(matchDictionary["intersectionBlock"]):
                     matchDictionary["intersectionBlock"] = valueBlock.intersection(currentGoal)
                     matchDictionary["matchingBlock"] = valueBlock
                     matchDictionary["valueBlock"] = value
@@ -299,8 +299,6 @@ def smallerIntervalMaker(ruleDictionary, attributeValue):
             if newInterval not in attributeValue[keyValue]:
                 attributeValue[keyValue][newInterval] = intervals
             ruleDictionary[keyValue] = [newInterval]
-
-    print (ruleDictionary[keyValue])        
 
 def floatIntervalGenerator(gap):
     edgeOfGap = gap.split("..")
