@@ -12,6 +12,7 @@ x = []
 y = []
 z = []
 
+##Checks if the file exists
 def fileChecker(passedFileName):
     fileName = passedFileName
 
@@ -20,6 +21,7 @@ def fileChecker(passedFileName):
 
     return fileName
 
+##Takes two input strings from the user and then stores them into global variables respectively
 def inOutName():
     global inputFileName
     global outputFileName
@@ -27,6 +29,7 @@ def inOutName():
     inputFileName = fileChecker(input("\nPlease enter the name of the text file: "))
     outputFileName = fileChecker(input("\nPlease enter the name of the output file: "))
 
+##inputFileStream takes values from the input text and stores them into a list of lists for later access
 def arrayMaker(attributeList):
     inputFileStream = open(inputFileName)
     readFlag = True
@@ -65,6 +68,7 @@ def arrayMaker(attributeList):
     inputFileStream.close()
     return everythingList
 
+##Sets the type of attribute for any given attribute list and returns an int depending on whether it is a symbol or float/int
 def attributeTypeSetter(everythingList,attributeList):
     symbolFlag = 0
     numberFlag = 0
@@ -91,6 +95,7 @@ def attributeTypeSetter(everythingList,attributeList):
 
     return typeList
 
+##Makes a dictionary of attribute value blocks for comparison
 def attributeValueBlockMaker(everythingList,attributeIndex,attributeType):
     global cutPoints
     attributeValueDiction = {}
@@ -120,6 +125,7 @@ def attributeValueBlockMaker(everythingList,attributeIndex,attributeType):
 
     return attributeValueDiction
 
+##calculates the cut points i.e. the average of two consecutive ordered values
 def cutPointCalculator(everythingList, attributeIndex):
     temp = set()
 
@@ -140,12 +146,14 @@ def cutPointCalculator(everythingList, attributeIndex):
 
     return intervalGaps
 
+##Calls MLEM2 and runs the algorithm
 def ruleGenerator(everythingList,attributeList,attributeValue,attributeType,conceptList):
     ruleSet = AStarCalculator(everythingList)
     goalSet = goalCalculator(ruleSet, conceptList)
 
     mlem2Algorithm(attributeValue, attributeType, goalSet, attributeList[-1])
 
+##calculates a dictionary of concepts
 def conceptCalculator(everythingList):
 
     conceptDictionary = {}
@@ -160,6 +168,7 @@ def conceptCalculator(everythingList):
 
     return conceptDictionary
 
+##calculates a list of AStar i.e. all possible A combinations
 def AStarCalculator(everythingList):
     AStar = []
 
@@ -180,6 +189,7 @@ def AStarCalculator(everythingList):
 
     return AStar
 
+##checks whether the passed conditions are equaivalent or not
 def equalConditions(condition1, condition2):
     for loop in range(0, len(condition1)-1):
         if condition1[loop] != condition2[loop]:
@@ -187,6 +197,7 @@ def equalConditions(condition1, condition2):
 
     return True
 
+## calculates a dictionary of goals
 def goalCalculator(ruleSet, conceptList):
     goalDictionary = {}
 
@@ -199,6 +210,7 @@ def goalCalculator(ruleSet, conceptList):
 
     return goalDictionary
 
+## Implementation of the MLEM2 algorithm
 def mlem2Algorithm(attributeValue, attributeType, goalSet, decisionValue):
     ruleSetList = []
 
@@ -244,7 +256,7 @@ def mlem2Algorithm(attributeValue, attributeType, goalSet, decisionValue):
     droppedRuleSet = ruleMaker(ruleSetList)
     printOutput(droppedRuleSet)
 
-
+##Calculates the value of y and z
 def caseCoverageCalculator(ruleDictionary,attributeValue,mainGoal):
     global y
     global z
@@ -260,6 +272,7 @@ def caseCoverageCalculator(ruleDictionary,attributeValue,mainGoal):
 
     return matchCase
 
+##Calculates the intersection agaist all possible subsets
 def biggestIntersectionCalculator(attributeValue, attributeType, ruleDictionary, currentGoal):
     matchDictionary = {"intersectionBlock": set(), "matchingBlock": set(), "valueBlock": None, "attributeBlock": None}
 
@@ -273,6 +286,7 @@ def biggestIntersectionCalculator(attributeValue, attributeType, ruleDictionary,
                     matchDictionary["attributeBlock"] = attribute
     return matchDictionary
 
+##Makes a smaller interval
 def smallerIntervalMaker(ruleDictionary, attributeValue):
     for keyValue, val in ruleDictionary.items():
         if len(val) > 1:
@@ -300,6 +314,7 @@ def smallerIntervalMaker(ruleDictionary, attributeValue):
                 attributeValue[keyValue][newInterval] = intervals
             ruleDictionary[keyValue] = [newInterval]
 
+##Generates a float for the interval value when its not a symbol
 def floatIntervalGenerator(gap):
     edgeOfGap = gap.split("..")
     interval = []
@@ -309,6 +324,7 @@ def floatIntervalGenerator(gap):
 
     return interval
 
+##Checks for redundant or weaker conditions and drops them
 def conditionDropper(ruleDictionary, attributeValue, mainGoal):
     for currentAttribute in list(ruleDictionary):
         temporary = set()
@@ -325,6 +341,7 @@ def conditionDropper(ruleDictionary, attributeValue, mainGoal):
         if len(temporary) and temporary.issubset(mainGoal):
             ruleDictionary.pop(currentAttribute, None)
 
+##Makes the string for outputting rules
 def ruleMaker(ruleSetList):
     global x
     droppedRuleSet = []
@@ -347,6 +364,7 @@ def ruleMaker(ruleSetList):
 
     return droppedRuleSet
 
+##prints to the output file passed as a name
 def printOutput(droppedRuleSet):
     print('\n')
     outputFileStream = open(outputFileName, 'w')
@@ -357,6 +375,7 @@ def printOutput(droppedRuleSet):
         outputFileStream.write(currentRule + '\n')
         loop += 1
 
+##Calls all the names
 def main():
     inOutName()
 
