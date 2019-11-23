@@ -1,13 +1,18 @@
 #Apurva Rai
 #EECS 690 Project
 import os
+import collections
 
 inputFromFile = None
 outputToFile = None
 inputFileName = ''
 outputFileName = ''
-everythingDictionary = {}
-sortedDictionary = {}
+everythingDictionary = collections.OrderedDict()
+sortedDictionary = collections.OrderedDict()
+attributeValueDictionary = {}
+listOfAttributes = []
+listOfRanges = []
+length = 0;
 
 def fileChecker(passedFileName):
     fileName = passedFileName
@@ -37,7 +42,9 @@ def integerOrFloat(passedString): ##https://stackoverflow.com/questions/34425583
         return -1
 
 def arrayMaker():
+    global listOfAttributes
     global everythingDictionary
+    global length
 
     with open(inputFileName,'r') as inputFromFile: ##https://stackoverflow.com/questions/1369526/what-is-the-python-keyword-with-used-for
         inputFromFile.readline()
@@ -45,12 +52,14 @@ def arrayMaker():
         attributeDecisionArray = tempArray[1:(len(tempArray)-1)]
 
         for element in attributeDecisionArray:
+            listOfAttributes.append(element)
             everythingDictionary[element] = []
 
         for line in inputFromFile:
+            length+=1
             tempArray = line.split()
 
-            if(line[0] == '!'):
+            if(tempArray[0] == '!'):
                 continue
 
             for attribute in attributeDecisionArray:
@@ -64,18 +73,19 @@ def arrayMaker():
 
     print ('\n')
     print (everythingDictionary)
-    #print (len(everythingDictionary.keys()))
 
 
 def cutPointMaker():
     global sortedDictionary
+    global listOfRanges
 
     sortedDictionary = {}
     sortedRanges = []
     i = 0;
+
     for attribute in everythingDictionary:
         if(i == len(everythingDictionary.keys())-1):
-            sortedDictionary[attribute] = everythingDictionary[attribute]
+            #sortedDictionary[attribute] = everythingDictionary[attribute]
             break
 
         sortedDictionary[attribute] = sorted(everythingDictionary[attribute])
@@ -91,13 +101,12 @@ def cutPointMaker():
 
         min = sortedDictionary[attribute][0]
         max = sortedDictionary[attribute][len(sortedDictionary[attribute])-1]
-        for num in range(0,len(sortedDictionary[attribute])):
-            if num == 0:
-                sortedRanges.append([min,(min+sortedDictionary[attribute][1])/2])
-            elif num == len(sortedDictionary[attribute])-1:
-                sortedRanges.append([(sortedDictionary[attribute][len(sortedDictionary[attribute])-2] + max)/2,max])
-            else:
-                sortedRanges.append([(sortedDictionary[attribute][num]+sortedDictionary[attribute][num-1])/2,(sortedDictionary[attribute][num+1]+sortedDictionary[attribute][num])/2])
+        mid = 0
+
+        for numerical in range(0,len(sortedDictionary[attribute])-1):
+            mid = (sortedDictionary[attribute][numerical]+sortedDictionary[attribute][numerical+1])/2
+            listOfRanges.append(mid)
+            sortedRanges.append([[min,mid],[mid,max]])
 
 
         sortedDictionary[attribute] = sortedRanges
@@ -105,8 +114,32 @@ def cutPointMaker():
         sortedRanges = []
 
     print ('\n')
-    print (sortedDictionary)
+    print (listOfRanges)
+    print (length)
 
+def attributeValueGenerator():
+    global attributeValueDictionary
+
+    for attribute in sortedDictionary:
+        for sortedRange in sortedDictionary[attribute]:
+            for item in sortedRange:
+                attributeValueDictionary[(attribute,item[0],item[1])] = []
+
+    print ('\n')
+    print (attributeValueDictionary)
+
+def attributeValueFiller():
+    for attribute in everythingDictionary:
+        for i,value in enumerate(everythingDictionary[attribute]):
+            if
+
+    print ('\n')
+    print (attributeValueDictionary)
+
+
+
+
+'''
 def conceptCalculator():
     conceptDictionary = {}
 
@@ -133,7 +166,7 @@ def equalCase(case1,case2):
         if(case1[i] != case2[i]):
             return False
 
-    return True        
+    return True
 
 def calculateAStar():
     AStar = []
@@ -142,6 +175,7 @@ def calculateAStar():
         flag = False
 
         for aElement in AStar:
+            print(element)
             if equalCase(element,everythingDictionary[aElement][0]):
                 aElement.append(i)
                 flag = True
@@ -156,14 +190,15 @@ def calculateAStar():
     print('\n')
     print(AStar)
 
-
-
+def makeGoals():
+    pass
+'''
 
 def main():
     inOutName()
     arrayMaker()
     cutPointMaker()
-    conceptCalculator()
-    calculateAStar()
+    attributeValueGenerator()
+    attributeValueFiller()
 
 main()
