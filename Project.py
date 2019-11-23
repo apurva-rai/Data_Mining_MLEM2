@@ -35,34 +35,34 @@ def arrayMaker(attributeList):
     temp = []
     i = 0;
 
-    inputFileStream.readline()
-    temp = inputFileStream.readline().split()
-    attributeList = temp[1:len(temp)-1]
-    everythingList.append(attributeList)
-    temp = inputFileStream.readline().split()
-
-    for line in inputFileStream:
-        split = line.split()
-        for element in split:
-            if element == '!':
+    for currentLine in inputFileStream:
+        currentSymbolList = currentLine.split()
+        for currentSymbol in currentSymbolList:
+            if currentSymbol == '!':
                 break
-            else:
-                if len(attributeList) <= i:
+            elif currentSymbol == '<':
+                skipFlag = True
+                readFlag = False
+            elif currentSymbol == '>':
+                skipFlag = False
+                readFlag = True
+            elif readFlag and not skipFlag:
+                if currentSymbol == '[':
+                    readFlag = True
+                elif currentSymbol != '[' and currentSymbol != ']':
+                    if currentSymbol not in attributeList:
+                        attributeList.append(currentSymbol)
+                elif currentSymbol == ']':
+                    readFlag = False
+            elif not readFlag and not skipFlag:
+                if i >= len(attributeList):
                     everythingList.append(temp)
                     temp = []
                     i = 0
-                temp.append(element)
+                temp.append(currentSymbol)
                 i += 1
-
     everythingList.append(temp)
     inputFileStream.close()
-
-    temp = everythingList[1]
-    temp2 = temp[len(temp)//2:]
-    temp = temp[:len(temp)//2]
-    everythingList[1] = temp
-    everythingList.insert(2,temp2)
-
     return everythingList
 
 def attributeTypeSetter(everythingList,attributeList):
@@ -72,16 +72,17 @@ def attributeTypeSetter(everythingList,attributeList):
     floatValue = r'\-*' + '[0-9]*' + r'\.*' + '[0-9]*'
 
     for i in range(0, len(attributeList)-1):
+        condition = 0
         while True:
-            attributeList = everythingList[condition][i]
-            matchValue = re.fullmatch(floatingValue + r'\.\.' + floatingValue + r'|[A-Za-z]+', attributeList)
+            att = everythingList[condition][i]
+            matchValue = re.fullmatch(floatValue + r'\.\.' + floatValue + r'|[A-Za-z]+', att)
 
             if matchValue is not None:
                 symbolFlag += 1
                 typeList.append(1)
                 break
 
-            matchValue = re.fullmatch(floatValue, attributeList)
+            matchValue = re.fullmatch(floatValue, att)
 
             if matchValue is not None:
                 numberFlag += 1
@@ -92,32 +93,32 @@ def attributeTypeSetter(everythingList,attributeList):
 
 def attributeValueBlockMaker(everythingList,attributeIndex,attributeType):
     global cutPoints
-    attributeValueDictionary = {}
+    attributeValueDiction = {}
 
     if attributeType == 2:
         cutPoints = cutPointCalculator(everythingList,attributeIndex)
 
         for value in cutPoints:
                 stringValue = "{}..{}".format(value[0], value[1])
-                attributeValueDictionary[stringValue] = set()
+                attributeValueDiction[stringValue] = set()
 
-    for loop, conditon in enumerate(everythingList):
+    for loop, condition in enumerate(everythingList):
         val = condition[attributeIndex]
 
         if attributeType == 2:
-            val = float(value)
+            val = float(val)
 
             for jump in cutPoints:
                 if jump[0] <= val <= jump[1]:
-                    attributeValueDictionary["{}..{}".format(jump[0], jump[1])].add(loop)
+                    attributeValueDiction["{}..{}".format(jump[0], jump[1])].add(loop)
 
-        elif val in attributeValueDictionary:
-            attributeValueDictionary[val].add(loop)
+        elif val in attributeValueDiction:
+            attributeValueDiction[val].add(loop)
 
         else:
-            attributeValueDictionary[val] = {loop}
+            attributeValueDiction[val] = {loop}
 
-    return attributeValueDictionary
+    return attributeValueDiction
 
 def cutPointCalculator(everythingList, attributeIndex):
     temp = set()
@@ -126,14 +127,15 @@ def cutPointCalculator(everythingList, attributeIndex):
         temporary = condition[attributeIndex]
         temp.add(float(temporary))
 
+
     temp = sorted(temp, key = float)
 
     min = temp[0]
     max = temp[-1]
-    intervalGap = []
+    intervalGaps = []
 
     for loop in range(0, len(temp)-1):
-        mid = round(((float(temp[loop]) + float(temp[i+1]))/2), 2)
+        mid = round(((float(temp[loop]) + float(temp[loop+1]))/2), 2)
         intervalGaps.extend([[min, mid],[mid,max]])
 
     return intervalGaps
@@ -161,11 +163,11 @@ def conceptCalculator(everythingList):
 def AStarCalculator(everythingList):
     AStar = []
 
-    for loop, comndition in enumerate():
+    for loop, condition in enumerate(everythingList):
         flag = False
 
         for AElement in AStar:
-            if equalConditions(case, everythingList[aElement[0]]):
+            if equalConditions(condition, everythingList[AElement[0]]):
                 AElement.append(loop)
                 flag = True
                 break
@@ -178,9 +180,9 @@ def AStarCalculator(everythingList):
 
     return AStar
 
-def equal(condtion1, conditon2):
+def equalConditions(condition1, condition2):
     for loop in range(0, len(condition1)-1):
-        if condtion1[loop] != conditon2[loop]:
+        if condition1[loop] != condition2[loop]:
             return False
 
     return True
@@ -207,8 +209,7 @@ def mlem2Algorithm(attributeValue, attributeType, goalSet, decisionValue):
         ruleDictionary = {}
 
         while len(goalsLeft):
-            biggestIntersection = biggestIntersectionCalculator(attributeValue, attribtueType, ruleDictionary, currentGoal)
-
+            biggestIntersection = biggestIntersectionCalculator(attributeValue, attributeType, ruleDictionary, currentGoal)
             if currentBlock:
                 currentBlock = currentBlock.intersection(biggestIntersection["matchingBlock"])
             else:
@@ -219,7 +220,7 @@ def mlem2Algorithm(attributeValue, attributeType, goalSet, decisionValue):
             else:
                 ruleDictionary[biggestIntersection["attributeBlock"]].append(biggestIntersection["valueBlock"])
 
-            if currentBlock.issubset(goalSet):
+            if currentBlock.issubset(mainGoal):
                 if len(currentBlock) == 0:
                     goalsLeft = goalsLeft - currentGoal
                     currentGoal = goalsLeft
@@ -227,7 +228,7 @@ def mlem2Algorithm(attributeValue, attributeType, goalSet, decisionValue):
                     smallerIntervalMaker(ruleDictionary,attributeValue)
                     conditionDropper(ruleDictionary, attributeValue, mainGoal)
                     matchValue = caseCoverageCalculator(ruleDictionary, attributeValue, mainGoal)
-                    goalsLeft = goalsLeft - currentGoal
+                    goalsLeft = goalsLeft - matchValue
                     currentGoal = goalsLeft
                     ruleSetList.append([ruleDictionary, [decisionValue, currentDecision]])
 
@@ -236,26 +237,40 @@ def mlem2Algorithm(attributeValue, attributeType, goalSet, decisionValue):
             else:
                 currentGoal = biggestIntersection["intersectionBlock"]
 
-                if len(currentGoal) == 0
+                if len(currentGoal) == 0:
                     currentGoal = goalsLeft
                     ruleDictionary = {}
 
     droppedRuleSet = ruleMaker(ruleSetList)
+    printOutput(droppedRuleSet)
 
-    printFromRuleSet(droppedRuleSet)
+
+def caseCoverageCalculator(ruleDictionary,attributeValue,mainGoal):
+    global y
+    global z
+    matchCase = mainGoal
+
+    for a, v in ruleDictionary.items():
+        currentBlock = set(attributeValue[a][v[0]])
+        matchCase = matchCase.intersection(currentBlock)
+    if len(matchCase):
+        c = len(matchCase)
+        y.append(c)
+    z = y
+
+    return matchCase
 
 def biggestIntersectionCalculator(attributeValue, attributeType, ruleDictionary, currentGoal):
-    matchDictionary = {"intersectionBlock": set(), "matchingBlock": set(), "attributeBlock": None, "valueBlock": None}
+    matchDictionary = {"intersectionBlock": set(), "matchingBlock": set(), "valueBlock": None, "attributeBlock": None}
 
-    for loop, (attributeValue, attributeSet) in enumerate(attributeValue.items()):
-        for val, value in attributeSet.items():
-            if attributeType[loop] == 1 and attributeValue not in ruleDictionary or attributeType[loop] == 2 and (attributeValue not in ruleDictionary or val not in ruleDictionary[attributeValue]):
-                if len(value.intersection(currentGoal)) == len(matchDictionary["intersectionBlock"]) and len(value) < len(matchDictionary["matchingBlock"]) or len(value.intersection(currentGoal)) > len(matchDictionary["intersectionBlock"]):
-                    matchDictionary["intersectionBlock"] = value.intersection(goal)
-                    matchDictionary["matchingBlock"] = value
-                    matchDictionary["valueBlock"] = val
-                    matchDictionary["attributeBlock"] = attributeValue
-
+    for loop, (attribute, attributeValueSet) in enumerate(attributeValue.items()):
+        for value, valueBlock in attributeValueSet.items():
+            if (attributeType[loop] == 1 and attribute not in ruleDictionary) or (attributeType[loop] == 2 and (attribute not in ruleDictionary or value not in ruleDictionary[attribute])):
+                if len(valueBlock.intersection(currentGoal)) == len(matchDictionary["intersectionBlock"]) and len(value) < len(matchDictionary["matchingBlock"]) or len(valueBlock.intersection(currentGoal)) > len(matchDictionary["intersectionBlock"]):
+                    matchDictionary["intersectionBlock"] = valueBlock.intersection(currentGoal)
+                    matchDictionary["matchingBlock"] = valueBlock
+                    matchDictionary["valueBlock"] = value
+                    matchDictionary["attributeBlock"] = attribute
     return matchDictionary
 
 def smallerIntervalMaker(ruleDictionary, attributeValue):
@@ -269,7 +284,7 @@ def smallerIntervalMaker(ruleDictionary, attributeValue):
                 temporary = attributeValue[keyValue][gap]
                 edgeOfInterval = floatIntervalGenerator(gap)
 
-                if minimum = None:
+                if minimum == None:
                     minimum, maximum = edgeOfInterval
                     intervals = temporary
                 else:
@@ -285,8 +300,10 @@ def smallerIntervalMaker(ruleDictionary, attributeValue):
                 attributeValue[keyValue][newInterval] = intervals
             ruleDictionary[keyValue] = [newInterval]
 
+    print (ruleDictionary[keyValue])        
+
 def floatIntervalGenerator(gap):
-    edgeofGap = gap.split("..")
+    edgeOfGap = gap.split("..")
     interval = []
 
     for loop in edgeOfGap:
@@ -298,7 +315,7 @@ def conditionDropper(ruleDictionary, attributeValue, mainGoal):
     for currentAttribute in list(ruleDictionary):
         temporary = set()
 
-        for tempAttribute, tempValue in ruleDictionary.items()
+        for tempAttribute, tempValue in ruleDictionary.items():
             currentBlock = attributeValue[tempAttribute][tempValue[0]]
 
             if tempValue != ruleDictionary[currentAttribute]:
@@ -337,7 +354,7 @@ def printOutput(droppedRuleSet):
     outputFileStream = open(outputFileName, 'w')
     loop = 0
 
-    for currentRule in droppedRule:
+    for currentRule in droppedRuleSet:
         outputFileStream.write("{}, {}, {} \n".format(x[loop], y[loop], z[loop]))
         outputFileStream.write(currentRule + '\n')
         loop += 1
@@ -353,10 +370,10 @@ def main():
 
     for loop, attribute in enumerate(attributeType):
         currentAttribute = attributeList[loop]
-        attributeValueDictionary[currentAttribute] = attributeValueBlockMaker(everthing, loop, attributeType)
+        attributeValueDictionary[currentAttribute] = attributeValueBlockMaker(everythingList, loop, attribute)
 
-    ruleGenerator(everythingList,attributeList,attributeValue,attributeType,conceptList)   
-        
+    ruleGenerator(everythingList,attributeList,attributeValueDictionary,attributeType,conceptList)
+
+    print ("The rules have been calculated and stored in the appropriate output file")
 
 main()
-
